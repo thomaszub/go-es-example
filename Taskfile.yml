@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  cassandra:shell:
+    desc: Starts a CQL shell in Cassandra.
+    cmds:
+      - nerdctl compose exec cassandra -- /opt/cassandra/bin/cqlsh
+
+  cassandra:events:
+    desc: Lists the events in Cassandra.
+    cmds:
+      - nerdctl compose exec cassandra -- /opt/cassandra/bin/cqlsh -e "use account; select account_id, event_id, blobAsText(payload) from account_event;"   
+
+  infra:start:
+    desc: Starts the infrastructure
+    cmds:
+      - nerdctl compose up -d
+
+  infra:stop:
+    desc: Stops the infrastructure
+    cmds:
+      - nerdctl compose stop
