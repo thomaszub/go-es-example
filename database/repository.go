@@ -12,15 +12,14 @@ import (
 	"github.com/thomaszub/go-es-example/domain"
 )
 
-type accountEventType int
+type accountEventType string
 
-// Order is important and should not be changed
 const (
-	accountCreatedEventType accountEventType = iota + 1
-	accountDeletedEventType
-	moneyDipositedEventType
-	moneyWithdrawnEventType
-	limitSetEventType
+	accountCreatedEventType accountEventType = "created"
+	accountDeletedEventType accountEventType = "deleted"
+	moneyDipositedEventType accountEventType = "moneyDeposited"
+	moneyWithdrawnEventType accountEventType = "moneyWithdrawn"
+	limitSetEventType       accountEventType = "limitSet"
 )
 
 var accountEventTable = table.New(table.Metadata{
@@ -78,9 +77,9 @@ func (r *CqlAccountEventRepository) ReadAllEvents(accountId gocql.UUID) ([]domai
 		}
 		typeI, ok := payload["eventType"]
 		if !ok {
-			return deserEvents, fmt.Errorf("type is not set on event %s", event.EventId.String()) //TODO
+			return deserEvents, fmt.Errorf("type is not set on event %s", event.EventId.String())
 		}
-		eventTypeF, ok := typeI.(float64)
+		eventTypeF, ok := typeI.(string)
 		if !ok {
 			return deserEvents, fmt.Errorf("%v is not a valid event type for event %s", typeI, event.EventId.String())
 		}
@@ -118,7 +117,7 @@ func (r *CqlAccountEventRepository) ReadAllEvents(accountId gocql.UUID) ([]domai
 			deserEvents = append(deserEvents, e)
 
 		default:
-			return deserEvents, fmt.Errorf("%d is not a known event type", eventType)
+			return deserEvents, fmt.Errorf("%s is not a known event type", eventType)
 		}
 	}
 	return deserEvents, nil
@@ -134,27 +133,27 @@ func (r *CqlAccountEventRepository) ReadAllAccountIds() ([]gocql.UUID, error) {
 }
 
 func (r *CqlAccountEventRepository) writeAccountCreatedEvent(event domain.AccountCreatedEvent) error {
-	payload := fmt.Sprintf(`{"eventType":%d}`, accountCreatedEventType)
+	payload := fmt.Sprintf(`{"eventType":"%s"}`, accountCreatedEventType)
 	return r.write(event.AccountId, event.EventId, payload)
 }
 
 func (r *CqlAccountEventRepository) writeAccountDeletedEvent(event domain.AccountDeletedEvent) error {
-	payload := fmt.Sprintf(`{"eventType":%d}`, accountDeletedEventType)
+	payload := fmt.Sprintf(`{"eventType":"%s"}`, accountDeletedEventType)
 	return r.write(event.AccountId, event.EventId, payload)
 }
 
 func (r *CqlAccountEventRepository) writeMoneyDipositedEvent(event domain.MoneyDipositedEvent) error {
-	payload := fmt.Sprintf(`{"eventType":%d,"amount":%f}`, moneyDipositedEventType, event.Amount)
+	payload := fmt.Sprintf(`{"eventType":"%s","amount":%f}`, moneyDipositedEventType, event.Amount)
 	return r.write(event.AccountId, event.EventId, payload)
 }
 
 func (r *CqlAccountEventRepository) writeMoneyWithdrawnEvent(event domain.MoneyWithdrawnEvent) error {
-	payload := fmt.Sprintf(`{"eventType":%d,"amount":%f}`, moneyWithdrawnEventType, event.Amount)
+	payload := fmt.Sprintf(`{"eventType":"%s","amount":%f}`, moneyWithdrawnEventType, event.Amount)
 	return r.write(event.AccountId, event.EventId, payload)
 }
 
 func (r *CqlAccountEventRepository) writeLimitSetEvent(event domain.LimitSetEvent) error {
-	payload := fmt.Sprintf(`{"eventType":%d,"limit":%f}`, limitSetEventType, event.Limit)
+	payload := fmt.Sprintf(`{"eventType":"%s","limit":%f}`, limitSetEventType, event.Limit)
 	return r.write(event.AccountId, event.EventId, payload)
 }
 
