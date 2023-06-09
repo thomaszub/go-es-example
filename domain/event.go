@@ -5,6 +5,7 @@ import "github.com/gocql/gocql"
 type AccountEvent interface {
 	GetAccountId() gocql.UUID
 	GetEventId() gocql.UUID
+	Apply(account *Account)
 }
 
 type AccountCreatedEvent struct {
@@ -20,6 +21,10 @@ func (e AccountCreatedEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
+func (e AccountCreatedEvent) Apply(account *Account) {
+	account.created = true
+}
+
 type AccountDeletedEvent struct {
 	AccountId gocql.UUID
 	EventId   gocql.UUID
@@ -31,6 +36,10 @@ func (e AccountDeletedEvent) GetAccountId() gocql.UUID {
 
 func (e AccountDeletedEvent) GetEventId() gocql.UUID {
 	return e.EventId
+}
+
+func (e AccountDeletedEvent) Apply(account *Account) {
+	account.deleted = true
 }
 
 type MoneyDipositedEvent struct {
@@ -47,6 +56,10 @@ func (e MoneyDipositedEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
+func (e MoneyDipositedEvent) Apply(account *Account) {
+	account.balance += e.Amount
+}
+
 type MoneyWithdrawnEvent struct {
 	AccountId gocql.UUID
 	EventId   gocql.UUID
@@ -61,6 +74,10 @@ func (e MoneyWithdrawnEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
+func (e MoneyWithdrawnEvent) Apply(account *Account) {
+	account.balance -= e.Amount
+}
+
 type LimitSetEvent struct {
 	AccountId gocql.UUID
 	EventId   gocql.UUID
@@ -73,4 +90,8 @@ func (e LimitSetEvent) GetAccountId() gocql.UUID {
 
 func (e LimitSetEvent) GetEventId() gocql.UUID {
 	return e.EventId
+}
+
+func (e LimitSetEvent) Apply(account *Account) {
+	account.limit = e.Limit
 }

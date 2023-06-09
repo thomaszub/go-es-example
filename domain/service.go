@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"fmt"
-
 	"github.com/gocql/gocql"
 )
 
@@ -57,20 +55,7 @@ func (s *AccountService) GetAccount(accountId gocql.UUID) (Account, error) {
 		return acc, err
 	}
 	for _, event := range events {
-		switch e := event.(type) {
-		case AccountCreatedEvent:
-			acc.created = true
-		case AccountDeletedEvent:
-			acc.deleted = true
-		case MoneyDipositedEvent:
-			acc.balance += e.Amount
-		case MoneyWithdrawnEvent:
-			acc.balance -= e.Amount
-		case LimitSetEvent:
-			acc.limit = e.Limit
-		default:
-			return acc, fmt.Errorf("%+v is not a valid account event", event)
-		}
+		event.Apply(&acc)
 	}
 	if !acc.created || acc.deleted {
 		return Account{}, NewAccountNotFoundError("account %s does not exist or is deleted", accountId)
