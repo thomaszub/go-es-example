@@ -9,7 +9,7 @@ tasks:
   cassandra:events:
     desc: Lists the events in Cassandra.
     cmds:
-      - nerdctl compose exec cassandra -- /opt/cassandra/bin/cqlsh -e "use account; select account_id, event_id, blobAsText(payload) from account_event;"   
+      - nerdctl compose exec cassandra -- /opt/cassandra/bin/cqlsh -e "use account; select account_id, event_id, dateOf(event_id), blobAsText(payload) from account_event;"   
 
   infra:start:
     desc: Starts the infrastructure
