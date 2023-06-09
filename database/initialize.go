@@ -9,18 +9,13 @@ import (
 	"github.com/gocql/gocql"
 )
 
+//go:embed keyspace.cql
+var keyspaceCql string
+
 //go:embed schema.cql
 var schemaCql string
 
-const keyspaceTemplate = `
-CREATE KEYSPACE IF NOT EXISTS {{.Keyspace}}
-WITH REPLICATION = {
-    'class': 'SimpleStrategy',
-    'replication_factor': 1 
-};
-`
-
-func InitSchema(cluster []string, keyspace string) error {
+func Initialize(cluster []string, keyspace string) error {
 	err := createKeyspace(cluster, keyspace)
 	if err != nil {
 		return err
@@ -58,7 +53,7 @@ func createKeyspace(cluster []string, keyspace string) error {
 
 func parseTemplate(keyspace string) (string, error) {
 	bytes := &bytes.Buffer{}
-	temp, err := template.New("create-keyspace").Parse(keyspaceTemplate)
+	temp, err := template.New("create-keyspace").Parse(keyspaceCql)
 	if err != nil {
 		return "", err
 	}

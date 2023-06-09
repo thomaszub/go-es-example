@@ -17,7 +17,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = database.InitSchema(cfg.CassandraCluster, cfg.CassandraKeyspace)
+	err = database.Initialize(cfg.CassandraCluster, cfg.CassandraKeyspace)
 	if err != nil {
 		log.Fatal(err)
 	}
