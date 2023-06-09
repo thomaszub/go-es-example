@@ -1,11 +1,15 @@
 package domain
 
-import "github.com/gocql/gocql"
+import (
+	"fmt"
+
+	"github.com/gocql/gocql"
+)
 
 type AccountEvent interface {
 	GetAccountId() gocql.UUID
 	GetEventId() gocql.UUID
-	Apply(account *Account)
+	Apply(account *Account) error
 }
 
 type AccountCreatedEvent struct {
@@ -21,8 +25,12 @@ func (e AccountCreatedEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
-func (e AccountCreatedEvent) Apply(account *Account) {
+func (e AccountCreatedEvent) Apply(account *Account) error {
+	if e.AccountId != account.accountId {
+		return eventAccountMismatched(e, account)
+	}
 	account.created = true
+	return nil
 }
 
 type AccountDeletedEvent struct {
@@ -38,8 +46,12 @@ func (e AccountDeletedEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
-func (e AccountDeletedEvent) Apply(account *Account) {
+func (e AccountDeletedEvent) Apply(account *Account) error {
+	if e.AccountId != account.accountId {
+		return eventAccountMismatched(e, account)
+	}
 	account.deleted = true
+	return nil
 }
 
 type MoneyDipositedEvent struct {
@@ -56,8 +68,12 @@ func (e MoneyDipositedEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
-func (e MoneyDipositedEvent) Apply(account *Account) {
+func (e MoneyDipositedEvent) Apply(account *Account) error {
+	if e.AccountId != account.accountId {
+		return eventAccountMismatched(e, account)
+	}
 	account.balance += e.Amount
+	return nil
 }
 
 type MoneyWithdrawnEvent struct {
@@ -74,8 +90,12 @@ func (e MoneyWithdrawnEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
-func (e MoneyWithdrawnEvent) Apply(account *Account) {
+func (e MoneyWithdrawnEvent) Apply(account *Account) error {
+	if e.AccountId != account.accountId {
+		return eventAccountMismatched(e, account)
+	}
 	account.balance -= e.Amount
+	return nil
 }
 
 type LimitSetEvent struct {
@@ -92,6 +112,14 @@ func (e LimitSetEvent) GetEventId() gocql.UUID {
 	return e.EventId
 }
 
-func (e LimitSetEvent) Apply(account *Account) {
+func (e LimitSetEvent) Apply(account *Account) error {
+	if e.AccountId != account.accountId {
+		return eventAccountMismatched(e, account)
+	}
 	account.limit = e.Limit
+	return nil
+}
+
+func eventAccountMismatched(event AccountEvent, account *Account) error {
+	return fmt.Errorf("event %+v is not an event of account %s", event, account.accountId)
 }

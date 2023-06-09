@@ -55,7 +55,10 @@ func (s *AccountService) GetAccount(accountId gocql.UUID) (Account, error) {
 		return acc, err
 	}
 	for _, event := range events {
-		event.Apply(&acc)
+		err := event.Apply(&acc)
+		if err != nil {
+			return acc, err
+		}
 	}
 	if !acc.created || acc.deleted {
 		return Account{}, NewAccountNotFoundError("account %s does not exist or is deleted", accountId)
