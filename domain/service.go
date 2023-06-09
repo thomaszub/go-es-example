@@ -14,24 +14,6 @@ func NewAccountService(repo AccountEventRepository) AccountService {
 	}
 }
 
-func (s *AccountService) GetAllAccountIds() ([]gocql.UUID, error) {
-	activeIds := []gocql.UUID{}
-	loadedIds, err := s.repo.ReadAllAccountIds()
-	if err != nil {
-		return activeIds, err
-	}
-	for _, id := range loadedIds {
-		exists, err := s.accountExists(id)
-		if err != nil {
-			return activeIds, err
-		}
-		if exists {
-			activeIds = append(activeIds, id)
-		}
-	}
-	return activeIds, nil
-}
-
 func (s *AccountService) CreateNewAccount() (Account, error) {
 	e := AccountCreatedEvent{
 		AccountId: gocql.MustRandomUUID(),
@@ -66,19 +48,20 @@ func (s *AccountService) GetAccount(accountId gocql.UUID) (Account, error) {
 	return acc, nil
 }
 
-func (s *AccountService) accountExists(accountId gocql.UUID) (bool, error) {
-	events, err := s.repo.ReadAllEvents(accountId)
+func (s *AccountService) GetAllAccountIds() ([]gocql.UUID, error) {
+	activeIds := []gocql.UUID{}
+	loadedIds, err := s.repo.ReadAllAccountIds()
 	if err != nil {
-		return false, err
+		return activeIds, err
 	}
-	exists := false
-	for _, event := range events {
-		switch event.(type) {
-		case AccountCreatedEvent:
-			exists = true
-		case AccountDeletedEvent:
-			exists = false
+	for _, id := range loadedIds {
+		acc, err := s.GetAccount(id)
+		if err != nil {
+			return activeIds, err
+		}
+		if acc.Exists() {
+			activeIds = append(activeIds, id)
 		}
 	}
-	return exists, nil
+	return activeIds, nil
 }

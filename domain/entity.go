@@ -13,6 +13,14 @@ type Account struct {
 	balance   float64
 }
 
+func (a *Account) Exists() bool {
+	return a.created && !a.deleted
+}
+
+func (a *Account) Deleted() bool {
+	return a.deleted
+}
+
 func (a *Account) AccountId() gocql.UUID {
 	return a.accountId
 }
