@@ -17,7 +17,7 @@ func NewAccountService(repo AccountEventRepository) AccountService {
 }
 
 func (s *AccountService) GetAllAccountIds() ([]gocql.UUID, error) {
-	var activeIds []gocql.UUID
+	activeIds := []gocql.UUID{}
 	loadedIds, err := s.repo.ReadAllAccountIds()
 	if err != nil {
 		return activeIds, err
