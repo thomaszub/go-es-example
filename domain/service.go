@@ -29,7 +29,6 @@ func (s *AccountService) GetAccount(accountId gocql.UUID) (Account, error) {
 	acc := Account{
 		repo:      s.repo,
 		accountId: accountId,
-		created:   false,
 		deleted:   false,
 	}
 	events, err := s.repo.ReadAllEvents(accountId)
@@ -42,7 +41,7 @@ func (s *AccountService) GetAccount(accountId gocql.UUID) (Account, error) {
 			return acc, err
 		}
 	}
-	if !acc.created || acc.deleted {
+	if len(events) == 0 || acc.deleted {
 		return Account{}, NewAccountNotFoundError("account %s does not exist or is deleted", accountId)
 	}
 	return acc, nil
@@ -57,9 +56,14 @@ func (s *AccountService) GetAllAccountIds() ([]gocql.UUID, error) {
 	for _, id := range loadedIds {
 		acc, err := s.GetAccount(id)
 		if err != nil {
-			return activeIds, err
+			switch err.(type) {
+			case *AccountNotFoundError:
+				continue
+			default:
+				return activeIds, err
+			}
 		}
-		if acc.Exists() {
+		if !acc.Deleted() {
 			activeIds = append(activeIds, id)
 		}
 	}

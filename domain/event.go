@@ -29,7 +29,6 @@ func (e AccountCreatedEvent) Apply(account *Account) error {
 	if e.AccountId != account.accountId {
 		return eventAccountMismatched(e, account)
 	}
-	account.created = true
 	return nil
 }
 

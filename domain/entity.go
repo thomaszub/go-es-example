@@ -7,14 +7,9 @@ import (
 type Account struct {
 	repo      AccountEventRepository
 	accountId gocql.UUID
-	created   bool
 	deleted   bool
 	limit     float64
 	balance   float64
-}
-
-func (a *Account) Exists() bool {
-	return a.created && !a.deleted
 }
 
 func (a *Account) Deleted() bool {
